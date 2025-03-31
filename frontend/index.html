@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Barbearia - Agendamento de Horários</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="assets/css/style.css" rel="stylesheet">
+    <script src="assets/script/script.js"></script>
+</head>
+<body>
+    <div class="navbar navbar-expand-lg navbar-dark">
+        <div class="container">
+            <a class="navbar-brand" href="#">Barbearia Elegância</a>
+        </div>
+    </div>
+    <div class="container">
+        <h1 class="text-center">Agendamento de Horários</h1>
+        <p class="text-center">Escolha seu horário com seu barbeiro de confiança!</p>
+
+        <div class="card p-4 mt-3">
+            <h3 class="text-center">Novo Agendamento</h3>
+            <form id="agendamento-form">
+                <div class="mb-3">
+                    <label for="nome" class="form-label">Seu Nome</label>
+                    <input type="text" id="nome" class="form-control" required>
+                </div>
+                <div class="mb-3">
+                    <label for="data" class="form-label">Escolha a Data</label>
+                    <input type="date" id="data" class="form-control" required>
+                </div>
+                <div class="mb-3">
+                    <label for="horario" class="form-label">Escolha o Horário</label>
+                    <select id="horario" class="form-select" required>
+                        <option value="">Selecione um horário</option>
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <label for="profissional" class="form-label">Escolha o Profissional</label>
+                    <select id="profissional" class="form-select" required>
+                        <option value="João (Barba e Corte)">João (Barba e Corte)</option>
+                        <option value="Carlos (Cortes Modernos)">Carlos (Cortes Modernos)</option>
+                        <option value="Pedro (Especialista em Barbas)">Pedro (Especialista em Barbas)</option>
+                    </select>
+                </div>
+                <button type="submit" class="btn btn-primary w-100">Agendar Agora</button>
+            </form>
+        </div>
+
+        <h3 class="text-center mt-5">Horários Agendados</h3>
+        <div class="row mt-3" id="agendamentos-container"></div>
+    </div>
+    
+    <script>
+        document.getElementById('data').addEventListener('change', carregarHorariosDisponiveis);
+
+        document.getElementById('agendamento-form').addEventListener('submit', function(event) {
+            event.preventDefault();
+            const nome = document.getElementById('nome').value;
+            const data = document.getElementById('data').value;
+            const horario = document.getElementById('horario').value;
+            const profissional = document.getElementById('profissional').value;
+            
+            fetch('http://127.0.0.1:5000/cadastrar_agendamento', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ nome, data, horario, profissional })
+            }).then(() => {
+                carregarAgendamentos();
+                carregarHorariosDisponiveis();
+            });
+        });
+
+        function carregarAgendamentos() {
+            fetch('http://127.0.0.1:5000/buscar_agendamentos')
+                .then(response => response.json())
+                .then(agendamentos => {
+                    const container = document.getElementById('agendamentos-container');
+                    container.innerHTML = '';
+                    agendamentos.forEach(a => {
+                        const card = `<div class="col-md-4 mt-3">
+                            <div class="card">
+                                <div class="card-body">
+                                    <h5 class="card-title">${a.nome}</h5>
+                                    <p class="card-text">Data: ${a.data}</p>
+                                    <p class="card-text">Horário: ${a.horario}</p>
+                                    <p class="card-text">Profissional: ${a.profissional}</p>
+                                    <button class="btn btn-danger btn-sm" onclick="excluirAgendamento(${a.id})">Cancelar</button>
+                                </div>
+                            </div>
+                        </div>`;
+                        container.innerHTML += card;
+                    });
+                });
+        }
+
+        function excluirAgendamento(id) {
+            fetch(`http://127.0.0.1:5000/deletar_agendamento/${id}`, {
+                method: 'DELETE'
+            }).then(response => {
+                if (response.ok) {
+                    carregarAgendamentos();
+                    carregarHorariosDisponiveis();
+                } else {
+                    console.error('Erro ao cancelar o agendamento');
+                }
+            });
+        }
+
+        function carregarHorariosDisponiveis() {
+            const dataSelecionada = document.getElementById('data').value;
+            const profissionalSelecionado = document.getElementById('profissional').value;
+            if (!dataSelecionada || !profissionalSelecionado) return;
+
+            fetch('http://127.0.0.1:5000/horarios_disponiveis', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ data: dataSelecionada, profissional: profissionalSelecionado })
+            })
+            .then(response => response.json())
+            .then(responseData => {
+                const horarioSelect = document.getElementById('horario');
+                horarioSelect.innerHTML = '';
+                responseData.horarios_disponiveis.forEach(h => {
+                    const option = document.createElement('option');
+                    option.value = h;
+                    option.textContent = h;
+                    horarioSelect.appendChild(option);
+                });
+            });
+        }
+
+        function configurarCalendario() {
+            const hoje = new Date().toISOString().split('T')[0];
+            document.getElementById('data').setAttribute('min', hoje);
+        }
+
+        configurarCalendario();
+        carregarAgendamentos();
+    </script>
+</body>
+</html>
