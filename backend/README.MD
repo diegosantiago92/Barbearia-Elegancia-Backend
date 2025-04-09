@@ -6,7 +6,7 @@ O **Barbearia Elegância - Sistema de Agendamentos** é uma aplicação desenvol
 ---
 
 ## **Funcionalidades**
-- **Cadastro de Usuários**: Registre clientes com nome e e-mail.
+- **Cadastro de Usuários**: Registre clientes.
 - **Agendamento de Horários**: Selecione a data, o horário e o profissional desejado.
 - **Listagem de Agendamentos**: Consulte todos os agendamentos realizados.
 - **Cancelamento de Agendamentos**: Remova agendamentos indesejados.
@@ -64,25 +64,6 @@ O **Barbearia Elegância - Sistema de Agendamentos** é uma aplicação desenvol
 
 ---
 
-## **Estrutura do Projeto**
-```
-barbearia-elegancia/
-├── app.py                # Backend principal (Flask)
-├── static/
-│   ├── assets/
-│   │   ├── css/
-│   │   │   └── style.css
-│   │   ├── img/
-│   │   └── script/
-│   │       └── script.js
-├── templates/
-│   └── index.html        # Frontend principal
-├── requirements.txt      # Dependências do Python
-└── README.md             # Documentação do projeto
-```
-
----
-
 ## **Endpoints da API**
 ### **Usuários**
 - `POST /cadastrar_usuario` - Cadastra um novo usuário.
@@ -101,24 +82,4 @@ barbearia-elegancia/
 - Implementar autenticação de usuários.
 - Adicionar notificações por e-mail para lembretes de agendamentos.
 - Otimizar o design e a usabilidade do frontend.
-- Implantar o sistema em produção (ex.: Heroku, AWS).
-
----
-
-## **Contribuição**
-Contribuições são bem-vindas! Para colaborar:
-1. Faça um fork do repositório.
-2. Crie uma nova branch para sua feature/ajuste:
-   ```bash
-   git checkout -b minha-feature
-   ```
-3. Envie suas alterações por um pull request.
-
----
-
-## **Licença**
-Este projeto está licenciado sob a [MIT License](LICENSE).
-
----
-
-Se precisar ajustar ou personalizar algo, é só me avisar! 🚀📄
+- Implantar o sistema em produção.

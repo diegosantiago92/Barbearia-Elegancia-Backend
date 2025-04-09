@@ -7,7 +7,7 @@ import datetime
 app = Flask(__name__)
 CORS(app)
 
-# Configuração do Swagger com detalhes do projeto
+# Configuração do Swagger com autenticação e detalhes do projeto
 template = {
     "swagger": "2.0",
     "info": {
@@ -16,7 +16,21 @@ template = {
         "version": "1.0.0"
     },
     "host": "127.0.0.1:5000",
-    "basePath": "/"
+    "basePath": "/",
+    "schemes": ["http"],
+    "produces": ["application/json"],
+    "securityDefinitions": {
+        "Bearer": {
+            "type": "apiKey",
+            "name": "Authorization",
+            "in": "header"
+        }
+    },
+    "security": [
+        {
+            "Bearer": []
+        }
+    ]
 }
 Swagger(app, template=template)
 
@@ -63,9 +77,11 @@ def cadastrar_usuario():
             nome:
               type: string
               description: Nome do usuário.
+              example: "Carlos Souza"
             email:
               type: string
               description: E-mail do usuário.
+              example: "carlos@email.com"
     responses:
       200:
         description: Usuário cadastrado com sucesso.
@@ -74,7 +90,15 @@ def cadastrar_usuario():
           properties:
             mensagem:
               type: string
-              example: Usuário cadastrado com sucesso!
+              example: "Usuário cadastrado com sucesso!"
+      400:
+        description: Erro ao cadastrar usuário.
+        schema:
+          type: object
+          properties:
+            erro:
+              type: string
+              example: "E-mail já cadastrado!"
     """
     dados = request.json
     novo_usuario = Usuario(nome=dados['nome'], email=dados['email'])
@@ -103,10 +127,10 @@ def buscar_usuarios():
                 example: 1
               nome:
                 type: string
-                example: Diego Silva
+                example: "Carlos Souza"
               email:
                 type: string
-                example: diego@email.com
+                example: "carlos@email.com"
     """
     usuarios = Usuario.query.all()
     return jsonify([{'id': u.id, 'nome': u.nome, 'email': u.email} for u in usuarios])
@@ -128,8 +152,20 @@ def deletar_usuario(id):
     responses:
       200:
         description: Usuário deletado com sucesso.
+        schema:
+          type: object
+          properties:
+            mensagem:
+              type: string
+              example: "Usuário deletado com sucesso!"
       404:
         description: Usuário não encontrado.
+        schema:
+          type: object
+          properties:
+            erro:
+              type: string
+              example: "Usuário não encontrado!"
     """
     usuario = Usuario.query.get(id)
     if usuario:
@@ -137,7 +173,6 @@ def deletar_usuario(id):
         db.session.commit()
         return jsonify({'mensagem': 'Usuário deletado com sucesso!'}), 200
     return jsonify({'erro': 'Usuário não encontrado!'}), 404
-
 
 # Rota para cadastrar um agendamento
 @app.route('/cadastrar_agendamento', methods=['POST'])
@@ -162,20 +197,36 @@ def cadastrar_agendamento():
             nome:
               type: string
               description: Nome do cliente.
+              example: "Diego Silva"
             data:
               type: string
               description: Data do agendamento (formato YYYY-MM-DD).
+              example: "2025-04-10"
             horario:
               type: string
               description: Horário do agendamento (formato HH:mm).
+              example: "14:00"
             profissional:
               type: string
               description: Nome do profissional.
+              example: "João"
     responses:
       200:
         description: Agendamento cadastrado com sucesso.
+        schema:
+          type: object
+          properties:
+            mensagem:
+              type: string
+              example: "Agendamento cadastrado com sucesso!"
       400:
         description: Erro ao cadastrar agendamento.
+        schema:
+          type: object
+          properties:
+            erro:
+              type: string
+              example: "Não é possível agendar para uma data retroativa!"
     """
     dados = request.json
     data_agendamento = datetime.datetime.strptime(dados['data'], '%Y-%m-%d').date()
@@ -184,7 +235,6 @@ def cadastrar_agendamento():
     if data_agendamento < data_atual:
         return jsonify({'erro': 'Não é possível agendar para uma data retroativa!'}), 400
 
-    # Checar duplicidade de horário para o profissional
     agendamento_existente = Agendamento.query.filter_by(
         data=dados['data'],
         horario=dados['horario'],
@@ -225,23 +275,22 @@ def buscar_agendamentos():
                 example: 1
               nome:
                 type: string
-                example: Diego Silva
+                example: "Diego Silva"
               data:
                 type: string
-                example: "2025-03-27"
+                example: "2025-04-10"
               horario:
                 type: string
                 example: "14:00"
               profissional:
                 type: string
-                example: João
+                example: "João"
     """
     agendamentos = Agendamento.query.all()
     return jsonify([
         {'id': a.id, 'nome': a.nome, 'data': a.data, 'horario': a.horario, 'profissional': a.profissional}
         for a in agendamentos
     ])
-
 # Rota para deletar agendamento
 @app.route('/deletar_agendamento/<int:id>', methods=['DELETE'])
 def deletar_agendamento(id):
@@ -290,9 +339,11 @@ def horarios_disponiveis():
             data:
               type: string
               description: Data para verificar os horários (formato YYYY-MM-DD).
+              example: "2025-04-10"
             profissional:
               type: string
               description: Nome do profissional.
+              example: "João"
     responses:
       200:
         description: Lista de horários disponíveis.
